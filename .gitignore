@@ -1,0 +1,25 @@
+# IDE
+.idea/
+.vscode/
+
+# Cache, session files, logs and secure files
+/var
+
+# Env files
+.env.local
+.env.local.php
+.env.*.local
+
+# Managed by Composer
+/vendor/
+composer.lock
+
+# PHPUnit
+/tests/coverage
+.phpunit
+.phpunit.result.cache
+phpunit.xml
+TEST-*.xml
+
+# Xdebug
+xdebug.log
