@@ -17,7 +17,7 @@ final class Serializer
     }
 
     /**
-     * @template T
+     * @template T of object
      *
      * @param class-string<T> $className
      *
@@ -25,6 +25,7 @@ final class Serializer
      *
      * @throws SerializerException
      *
+     * @noinspection PhpDocSignatureInspection - return type is correct
      * @psalm-suppress InvalidReturnType
      * @psalm-suppress InvalidReturnStatement
      */
@@ -34,7 +35,7 @@ final class Serializer
     }
 
     /**
-     * @template T
+     * @template T of object
      *
      * @param class-string<T> $className
      *
@@ -48,13 +49,14 @@ final class Serializer
     }
 
     /**
-     * @template T
+     * @template T of object
      *
      * @param class-string<T> $className
      *
      * @return T|iterable<string|int, T>
      *
      * @throws SerializerException
+     * @noinspection PhpDocSignatureInspection - return type is correct
      */
     public function fromArray(array $data, string $className, ?iterable $iterable = null): object|iterable
     {
@@ -62,7 +64,7 @@ final class Serializer
     }
 
     /**
-     * @template T
+     * @template T of object
      *
      * @param class-string<T> $className
      *
