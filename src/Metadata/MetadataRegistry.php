@@ -50,8 +50,8 @@ final class MetadataRegistry
                 $this->metadata[$className] = $this->metadataFactory->buildMetadata($className);
                 $cachedItem->set($this->metadata[$className]);
                 $this->appCache->save($cachedItem);
-            } catch (InvalidArgumentException) {
-                $this->appLogger->warning('Unable to cache Serializer metadata.');
+            } catch (InvalidArgumentException $exception) {
+                $this->appLogger->warning('Unable to cache Serializer metadata: ' . $exception->getMessage());
             }
         }
 
