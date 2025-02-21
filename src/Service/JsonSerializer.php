@@ -64,7 +64,7 @@ final class JsonSerializer
     {
         $output = [];
         foreach ($this->metadataRegistry->get($data::class) as $name => $metadata) {
-            $value = $data->{$metadata->getter}();
+            $value = $metadata->getterSetterStrategy ? $data->{$metadata->getter}() : $data->{$metadata->property};
             $output[$name] = $this->handlerResolver
                 ->getSerializationHandler($value, $metadata->customHandler)
                 ->serialize($value, $metadata)

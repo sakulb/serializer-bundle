@@ -91,7 +91,7 @@ final class JsonDeserializer
             }
 
             try {
-                $object->{$metadata->setter}($value);
+                $metadata->getterSetterStrategy ? $object->{$metadata->setter}($value) : $object->{$metadata->property} = $value;
             } catch (Throwable) {
                 throw new SerializerException('Unable to deserialize "' . $name . '". Check type.');
             }

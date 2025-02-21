@@ -117,7 +117,7 @@ final class MetadataFactory
             $attribute->handler,
             $this->resolveCustomType($attribute),
             $attribute->strategy,
-            orderBy: $attribute->orderBy
+            orderBy: $attribute->orderBy,
         );
     }
 
@@ -145,13 +145,27 @@ final class MetadataFactory
                 break;
             }
         }
-        $getter = $getterPrefix . ucfirst($property->getName());
-        if (false === $property->getDeclaringClass()->hasMethod($getter)) {
-            throw new SerializerException('Getter method ' . $getter . ' not found in ' . $property->getDeclaringClass()->getName() . '.');
+        $getter = $setter = null;
+        $getterSetterStrategy = true;
+        if (version_compare(PHP_VERSION, '8.4.0', '>=') && $property->hasHooks()) {
+            $getterSetterStrategy = false;
+            if ($property->hasHook(\PropertyHookType::Get)) {
+                $getter = $property->getName();
+            }
+            if ($property->hasHook(\PropertyHookType::Set)) {
+                $setter = $property->getName();
+            }
         }
-        $setter = 'set' . ucfirst($property->getName());
-        if (false === $property->getDeclaringClass()->hasMethod($getter)) {
-            throw new SerializerException('Setter method ' . $setter . ' not found in ' . $property->getDeclaringClass()->getName() . '.');
+        if ($getterSetterStrategy) {
+            $getter = $getterPrefix . ucfirst($property->getName());
+            if (false === $property->getDeclaringClass()->hasMethod($getter)) {
+                throw new SerializerException('Getter method ' . $getter . ' not found in ' . $property->getDeclaringClass()->getName() . '.');
+            }
+
+            $setter = 'set' . ucfirst($property->getName());
+            if (false === $property->getDeclaringClass()->hasMethod($getter)) {
+                throw new SerializerException('Setter method ' . $setter . ' not found in ' . $property->getDeclaringClass()->getName() . '.');
+            }
         }
 
         return new Metadata(
@@ -165,7 +179,8 @@ final class MetadataFactory
             $attribute->strategy,
             $attribute->persistedName,
             $attribute->discriminatorMap,
-            orderBy: $attribute->orderBy
+            orderBy: $attribute->orderBy,
+            getterSetterStrategy: $getterSetterStrategy,
         );
     }
 
