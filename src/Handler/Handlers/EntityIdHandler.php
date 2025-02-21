@@ -29,7 +29,7 @@ final class EntityIdHandler extends AbstractHandler
         if (null === $value) {
             return null;
         }
-        $toIdFunction = fn (object $item): null|int|string|object => $item->getId();
+        $toIdFunction = fn (object $item): null|int|string|object => $metadata->getterSetterStrategy ? $item->getId() : $item->id;
         if (is_array($value)) {
             $ids = array_map($toIdFunction, $value);
             if (Serialize::KEYS_VALUES === $metadata->strategy) {
@@ -57,11 +57,20 @@ final class EntityIdHandler extends AbstractHandler
 
             return $ids->getValues();
         }
-        if (method_exists($value, 'getId')) {
+        if ($this->isIdentifiable($value, $metadata)) {
             return $toIdFunction($value);
         }
 
         throw new SerializerException('Unsupported value for ' . self::class . '::' . __FUNCTION__);
+    }
+
+    private function isIdentifiable(mixed $value, Metadata $metadata): bool
+    {
+        if ($metadata->getterSetterStrategy) {
+            return method_exists($value, 'getId');
+        }
+
+        return property_exists($value, 'id');
     }
 
     public function deserialize(mixed $value, Metadata $metadata): mixed
@@ -86,7 +95,7 @@ final class EntityIdHandler extends AbstractHandler
         }
         $deserializeType = $metadata->customType ?? $metadata->type;
         /** @psalm-suppress ArgumentTypeCoercion */
-        if (method_exists($deserializeType, 'getId') && (is_int($value) || is_string($value))) {
+        if ($this->isIdentifiable($deserializeType, $metadata) && (is_int($value) || is_string($value))) {
             return $this->entityManager->find($deserializeType, $value);
         }
 
@@ -100,12 +109,12 @@ final class EntityIdHandler extends AbstractHandler
             || Type::BUILTIN_TYPE_ARRAY === $metadata->type) {
             $description['type'] = Type::BUILTIN_TYPE_ARRAY;
             $description['title'] = SerializerHelper::getClassBaseName((string) $metadata->customType) . ' IDs';
-            $description['items'] = ['type' => $this->describeReturnType((string) $metadata->customType)];
+            $description['items'] = ['type' => $this->describeReturnType((string) $metadata->customType, $metadata->getterSetterStrategy)];
 
             return $description;
         }
 
-        $description['type'] = $this->describeReturnType($metadata->type);
+        $description['type'] = $this->describeReturnType($metadata->type, $metadata->getterSetterStrategy);
         $description['title'] = SerializerHelper::getClassBaseName($metadata->type) . ' ID';
 
         return $description;
@@ -147,18 +156,21 @@ final class EntityIdHandler extends AbstractHandler
         return new ArrayCollection($resultIds);
     }
 
-    private function describeReturnType(string $type): string
+    private function describeReturnType(string $type, bool $getterSetterStrategy): string
     {
-        try {
-            /** @psalm-suppress ArgumentTypeCoercion */
-            $reflection = new ReflectionMethod($type, 'getId');
-        } catch (ReflectionException $e) {
-            return $type;
-        }
+        if ($getterSetterStrategy) {
+            try {
+                /** @psalm-suppress ArgumentTypeCoercion */
+                $reflection = new ReflectionMethod($type, 'getId');
+            } catch (ReflectionException $e) {
+                return $type;
+            }
 
-        if ($reflection->getReturnType() instanceof ReflectionNamedType) {
-            return SerializerHelper::getOaFriendlyType($reflection->getReturnType()->getName());
+            if ($reflection->getReturnType() instanceof ReflectionNamedType) {
+                return SerializerHelper::getOaFriendlyType($reflection->getReturnType()->getName());
+            }
         }
+        // TODO describe prop hook type.
 
         return SerializerHelper::getOaFriendlyType($type);
     }
