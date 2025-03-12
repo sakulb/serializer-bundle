@@ -83,7 +83,7 @@ final class SerializerModelDescriber implements ModelDescriberInterface
     private function getSymfonyConstraintAnnotationReader(): SymfonyConstraintAnnotationReader
     {
         if (null === $this->symfonyConstraintAnnotationReader) {
-            $this->symfonyConstraintAnnotationReader = new SymfonyConstraintAnnotationReader(null);
+            $this->symfonyConstraintAnnotationReader = new SymfonyConstraintAnnotationReader();
         }
 
         return $this->symfonyConstraintAnnotationReader;
