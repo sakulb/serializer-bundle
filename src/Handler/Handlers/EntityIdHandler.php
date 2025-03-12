@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sakulb\SerializerBundle\Handler\Handlers;
 
+use ReflectionProperty;
 use Sakulb\SerializerBundle\Attributes\Serialize;
 use Sakulb\SerializerBundle\Exception\SerializerException;
 use Sakulb\SerializerBundle\Helper\SerializerHelper;
@@ -158,19 +159,18 @@ final class EntityIdHandler extends AbstractHandler
 
     private function describeReturnType(string $type, bool $getterSetterStrategy): string
     {
-        if ($getterSetterStrategy) {
-            try {
-                /** @psalm-suppress ArgumentTypeCoercion */
-                $reflection = new ReflectionMethod($type, 'getId');
-            } catch (ReflectionException $e) {
-                return $type;
-            }
-
-            if ($reflection->getReturnType() instanceof ReflectionNamedType) {
-                return SerializerHelper::getOaFriendlyType($reflection->getReturnType()->getName());
-            }
+        try {
+            $reflection = $getterSetterStrategy
+                ? new ReflectionMethod($type, 'getId')
+                : new ReflectionProperty($type, 'id')
+            ;
+        } catch (ReflectionException $e) {
+            return SerializerHelper::getOaFriendlyType($type);
         }
-        // TODO describe prop hook type.
+        $returnType = $getterSetterStrategy ? $reflection->getReturnType() : $reflection->getType();
+        if ($returnType instanceof ReflectionNamedType) {
+            return SerializerHelper::getOaFriendlyType($returnType->getName());
+        }
 
         return SerializerHelper::getOaFriendlyType($type);
     }
