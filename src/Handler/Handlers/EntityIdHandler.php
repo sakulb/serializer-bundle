@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sakulb\SerializerBundle\Handler\Handlers;
 
+use Doctrine\Persistence\Proxy;
 use ReflectionProperty;
 use Sakulb\SerializerBundle\Attributes\Serialize;
 use Sakulb\SerializerBundle\Exception\SerializerException;
@@ -30,7 +31,16 @@ final class EntityIdHandler extends AbstractHandler
         if (null === $value) {
             return null;
         }
-        $toIdFunction = fn (object $item): null|int|string|object => $metadata->getterSetterStrategy ? $item->getId() : $item->id;
+        $toIdFunction = function (object $item) use ($metadata): null|int|string|object {
+            if ($metadata->getterSetterStrategy) {
+                return $item->getId();
+            }
+            if ($item instanceof Proxy) {
+                return $this->entityManager->getUnitOfWork()->getEntityIdentifier($item)['id'] ?? null;
+            }
+            return $item->id;
+        };
+
         if (is_array($value)) {
             $ids = array_map($toIdFunction, $value);
             if (Serialize::KEYS_VALUES === $metadata->strategy) {
