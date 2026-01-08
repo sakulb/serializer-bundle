@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sakulb\SerializerBundle\Handler\Handlers;
 
+use Doctrine\ORM\Exception\ORMException;
+use Doctrine\ORM\OptimisticLockException;
 use Doctrine\Persistence\Proxy;
 use ReflectionProperty;
 use Sakulb\SerializerBundle\Attributes\Serialize;
@@ -16,7 +18,10 @@ use Doctrine\ORM\EntityManagerInterface;
 use ReflectionException;
 use ReflectionMethod;
 use ReflectionNamedType;
-use Symfony\Component\PropertyInfo\Type;
+use stdClass;
+use Symfony\Component\TypeInfo\TypeIdentifier;
+use Symfony\Component\Uid\AbstractUid;
+use Symfony\Component\Uid\Ulid;
 use Symfony\Component\Uid\Uuid;
 
 final class EntityIdHandler extends AbstractHandler
@@ -45,7 +50,7 @@ final class EntityIdHandler extends AbstractHandler
             $ids = array_map($toIdFunction, $value);
             if (Serialize::KEYS_VALUES === $metadata->strategy) {
                 if (empty($ids)) {
-                    return new \stdClass();
+                    return new stdClass();
                 }
 
                 return $ids;
@@ -60,7 +65,7 @@ final class EntityIdHandler extends AbstractHandler
             }
             if (Serialize::KEYS_VALUES === $metadata->strategy) {
                 if ($ids->isEmpty()) {
-                    return new \stdClass();
+                    return new stdClass();
                 }
 
                 return $ids->toArray();
@@ -84,6 +89,11 @@ final class EntityIdHandler extends AbstractHandler
         return property_exists($value, 'id');
     }
 
+    /**
+     * @throws OptimisticLockException
+     * @throws ORMException
+     * @throws SerializerException
+     */
     public function deserialize(mixed $value, Metadata $metadata): mixed
     {
         if (null === $value) {
@@ -117,8 +127,8 @@ final class EntityIdHandler extends AbstractHandler
     {
         $description = parent::describe($property, $metadata);
         if (is_a($metadata->type, Collection::class, true)
-            || Type::BUILTIN_TYPE_ARRAY === $metadata->type) {
-            $description['type'] = Type::BUILTIN_TYPE_ARRAY;
+            || TypeIdentifier::ARRAY->value === $metadata->type) {
+            $description['type'] = TypeIdentifier::ARRAY->value;
             $description['title'] = SerializerHelper::getClassBaseName((string) $metadata->customType) . ' IDs';
             $description['items'] = ['type' => $this->describeReturnType((string) $metadata->customType, $metadata->getterSetterStrategy)];
 
@@ -133,12 +143,19 @@ final class EntityIdHandler extends AbstractHandler
 
     private function getOrderedIDs(array $ids, Metadata $metadata): Collection
     {
-        $uuids = false;
-        $ids = array_map(function (null|int|string|object $id) use (&$uuids) {
-            if (class_exists(Uuid::class) && $id instanceof Uuid) {
-                $uuids = true;
+        $uidClass = null;
+        $ids = array_map(function (null|int|string|object $id) use (&$uidClass) {
+            if (class_exists(AbstractUid::class)) {
+                if ($id instanceof Uuid) {
+                    $uidClass = Uuid::class;
 
-                return $id->toBinary();
+                    return $id->toBinary();
+                }
+                if ($id instanceof Ulid) {
+                    $uidClass = Ulid::class;
+
+                    return $id->toBinary();
+                }
             }
 
             return $id;
@@ -155,13 +172,12 @@ final class EntityIdHandler extends AbstractHandler
                 $dqb->addOrderBy('entity.' . $field, $direction);
             }
         }
-        $resultIds = array_map(function (null|int|string $id) use ($uuids) {
-            /** @psalm-suppress TypeDoesNotContainType */
-            if (class_exists(Uuid::class) && $uuids) {
-                return Uuid::fromString((string) $id);
-            }
-
-            return $id;
+        $resultIds = array_map(function (null|int|string $id) use ($uidClass) {
+            return match ($uidClass) {
+                Uuid::class => Uuid::fromString((string)$id),
+                Ulid::class => Ulid::fromString((string)$id),
+                default => $id,
+            };
         }, $dqb->getQuery()->getSingleColumnResult());
 
         return new ArrayCollection($resultIds);
@@ -174,7 +190,7 @@ final class EntityIdHandler extends AbstractHandler
                 ? new ReflectionMethod($type, 'getId')
                 : new ReflectionProperty($type, 'id')
             ;
-        } catch (ReflectionException $e) {
+        } catch (ReflectionException) {
             return SerializerHelper::getOaFriendlyType($type);
         }
         $returnType = $getterSetterStrategy ? $reflection->getReturnType() : $reflection->getType();

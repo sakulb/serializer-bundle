@@ -11,10 +11,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Controller\ValueResolverInterface;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
 
-final class SerializerValueResolver implements ValueResolverInterface
+final readonly class SerializerValueResolver implements ValueResolverInterface
 {
     public function __construct(
-        private readonly Serializer $serializer
+        private Serializer $serializer
     ) {
     }
 

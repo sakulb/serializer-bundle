@@ -12,11 +12,11 @@ use Doctrine\Common\Collections\Collection;
 use JsonException;
 use Throwable;
 
-final class JsonDeserializer
+final readonly class JsonDeserializer
 {
     public function __construct(
-        private readonly HandlerResolver $handlerResolver,
-        private readonly MetadataRegistry $metadataRegistry,
+        private HandlerResolver $handlerResolver,
+        private MetadataRegistry $metadataRegistry,
     ) {
     }
 

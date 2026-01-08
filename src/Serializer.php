@@ -8,11 +8,11 @@ use Sakulb\SerializerBundle\Exception\SerializerException;
 use Sakulb\SerializerBundle\Service\JsonDeserializer;
 use Sakulb\SerializerBundle\Service\JsonSerializer;
 
-final class Serializer
+final readonly class Serializer
 {
     public function __construct(
-        private readonly JsonSerializer $jsonSerializer,
-        private readonly JsonDeserializer $jsonDeserializer,
+        private JsonSerializer $jsonSerializer,
+        private JsonDeserializer $jsonDeserializer,
     ) {
     }
 

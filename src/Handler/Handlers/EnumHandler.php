@@ -8,7 +8,7 @@ use Sakulb\SerializerBundle\Exception\DeserializationException;
 use Sakulb\SerializerBundle\Exception\SerializerException;
 use Sakulb\SerializerBundle\Metadata\Metadata;
 use BackedEnum;
-use Symfony\Component\PropertyInfo\Type;
+use Symfony\Component\TypeInfo\TypeIdentifier;
 use UnitEnum;
 
 final class EnumHandler extends AbstractHandler
@@ -82,7 +82,7 @@ final class EnumHandler extends AbstractHandler
             $enums[] = $enumCase->value;
         }
         $description['enum'] = $enums;
-        $description['type'] = Type::BUILTIN_TYPE_STRING;
+        $description['type'] = TypeIdentifier::STRING->value;
 
         return $description;
     }

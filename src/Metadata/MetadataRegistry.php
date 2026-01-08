@@ -13,7 +13,7 @@ use Psr\Log\LoggerInterface;
 
 final class MetadataRegistry
 {
-    private const CACHE_PREFIX = 'sakulb_ser_';
+    private const string CACHE_PREFIX = 'sakulb_ser_';
 
     /**
      * @var array<class-string, array<string, Metadata>>

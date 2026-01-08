@@ -4,31 +4,31 @@ declare(strict_types=1);
 
 namespace Sakulb\SerializerBundle\Handler\Handlers;
 
+use Sakulb\SerializerBundle\Exception\SerializerException;
 use Sakulb\SerializerBundle\Metadata\Metadata;
-use Symfony\Component\PropertyInfo\Type;
+use Symfony\Component\TypeInfo\TypeIdentifier;
 use Symfony\Component\Uid\AbstractUid;
-use Symfony\Component\Uid\MaxUuid;
-use Symfony\Component\Uid\NilUuid;
+use Symfony\Component\Uid\Ulid;
 use Symfony\Component\Uid\Uuid;
 
-final class UuidHandler extends AbstractHandler
+final class UidHandler extends AbstractHandler
 {
     public static function supportsSerialize(mixed $value): bool
     {
-        return $value instanceof Uuid;
+        return $value instanceof AbstractUid;
     }
 
     /**
-     * @param Uuid $value
+     * @param AbstractUid $value
      */
     public function serialize(mixed $value, Metadata $metadata): string
     {
-        return $value->toRfc4122();
+        return $value->toString();
     }
 
     public static function supportsDeserialize(mixed $value, string $type): bool
     {
-        return is_a($type, Uuid::class, true);
+        return is_a($type, AbstractUid::class, true);
     }
 
     public function deserialize(mixed $value, Metadata $metadata): ?AbstractUid
@@ -36,27 +36,27 @@ final class UuidHandler extends AbstractHandler
         if (null === $value) {
             return null;
         }
-        if ('00000000-0000-0000-0000-000000000000' === $value || '' === $value) {
-            return new NilUuid();
+        if (Ulid::isValid($value)) {
+            return Ulid::fromString($value);
         }
-        if ('ffffffff-ffff-ffff-ffff-ffffffffffff' === $value) {
-            return new MaxUuid();
+        if (Uuid::isValid($value)) {
+            return Uuid::fromString($value);
         }
 
-        return Uuid::fromString($value);
+        throw new SerializerException('Unsupported value for ' . self::class . '::' . __FUNCTION__);
     }
 
     public static function supportsDescribe(string $property, Metadata $metadata): bool
     {
-        return is_a($metadata->type, Uuid::class, true);
+        return is_a($metadata->type, AbstractUid::class, true);
     }
 
     public function describe(string $property, Metadata $metadata): array
     {
         $description = parent::describe($property, $metadata);
-        $description['type'] = Type::BUILTIN_TYPE_STRING;
-        $description['title'] = 'UUID';
-        $description['format'] = 'uuid';
+        $description['type'] = TypeIdentifier::STRING->value;
+        $description['title'] = 'UID';
+        $description['format'] = 'uid';
 
         return $description;
     }

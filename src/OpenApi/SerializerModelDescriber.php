@@ -18,12 +18,12 @@ use OpenApi\Annotations\Schema;
 use ReflectionException;
 use ReflectionMethod;
 use ReflectionProperty;
-use Symfony\Component\PropertyInfo\Type;
-use const PHP_EOL;
+use Symfony\Component\TypeInfo\Type;
+use Symfony\Component\TypeInfo\TypeIdentifier;
 
 final class SerializerModelDescriber implements ModelDescriberInterface
 {
-    public const NESTED_CLASS = 'nested_object';
+    public const string NESTED_CLASS = 'nested_object';
 
     private ?SymfonyConstraintAnnotationReader $symfonyConstraintAnnotationReader = null;
 
@@ -43,13 +43,13 @@ final class SerializerModelDescriber implements ModelDescriberInterface
      */
     public function describe(Model $model, Schema $schema): void
     {
-        $schema->type = Type::BUILTIN_TYPE_OBJECT;
+        $schema->type = TypeIdentifier::OBJECT->value;
         $properties = [];
         foreach ($this->getMetadata($model) as $propertyName => $metadata) {
             $handler = $this->handlerResolver->getDescriptionHandler($propertyName, $metadata);
             $description = $handler->describe($propertyName, $metadata);
 
-            // Describe nested object.
+            // Describe a nested object.
             if (isset($description[self::NESTED_CLASS])) {
                 $nestedSchema = $this->describeNested($propertyName, $description);
                 if ($nestedSchema) {
@@ -62,17 +62,18 @@ final class SerializerModelDescriber implements ModelDescriberInterface
             $property = new Property($description);
 
             // Describe symfony constraints and property docBlock description.
-            if ($metadata->property && null !== $model->getType()->getClassName()) {
+            $className = $this->getModelClassName($model);
+            if ($metadata->property && $className) {
                 /** @psalm-suppress ArgumentTypeCoercion */
-                $propertyReflection = new ReflectionProperty($model->getType()->getClassName(), $metadata->property);
+                $propertyReflection = new ReflectionProperty($className, $metadata->property);
                 $this->getSymfonyConstraintAnnotationReader()->updateProperty($propertyReflection, $property);
                 $this->addDocBlockDescription($propertyReflection, $property);
             }
 
             // Method docBlock description.
-            if (null === $metadata->setter && null !== $model->getType()->getClassName()) {
+            if (null === $metadata->setter && $className) {
                 /** @psalm-suppress ArgumentTypeCoercion */
-                $methodReflection = new ReflectionMethod($model->getType()->getClassName(), $metadata->getter);
+                $methodReflection = new ReflectionMethod($className, $metadata->getter);
                 $this->addDocBlockDescription($methodReflection, $property);
             }
 
@@ -128,7 +129,7 @@ final class SerializerModelDescriber implements ModelDescriberInterface
     private function describeNested(string $property, array $description): ?Property
     {
         $className = $description[self::NESTED_CLASS];
-        $nestedModel = new Model(new Type(Type::BUILTIN_TYPE_OBJECT, class: $className));
+        $nestedModel = new Model(new Type\ObjectType($className));
         $nestedSchema = new Property([
             'property' => $property,
             'title' => SerializerHelper::getClassBaseName($className),
@@ -151,7 +152,7 @@ final class SerializerModelDescriber implements ModelDescriberInterface
     {
         if (isset($description['items'][self::NESTED_CLASS])) {
             $nestedItems = new Items(['title' => SerializerHelper::getClassBaseName($description['items'][self::NESTED_CLASS])]);
-            $nestedItemsModel = new Model(new Type(Type::BUILTIN_TYPE_OBJECT, class: $description['items'][self::NESTED_CLASS]));
+            $nestedItemsModel = new Model(new Type\ObjectType($description['items'][self::NESTED_CLASS]));
 
             if ($this->supports($nestedItemsModel)) {
                 $this->describe($nestedItemsModel, $nestedItems);
@@ -166,8 +167,8 @@ final class SerializerModelDescriber implements ModelDescriberInterface
      */
     private function getMetadata(Model $model): array
     {
-        $className = $model->getType()->getClassName();
-        if ($className && class_exists($className)) {
+        $className = $this->getModelClassName($model);
+        if ($className) {
             try {
                 return $this->metadataRegistry->get($className);
             } catch (SerializerException) {
@@ -176,5 +177,18 @@ final class SerializerModelDescriber implements ModelDescriberInterface
         }
 
         return [];
+    }
+
+    private function getModelClassName(Model $model): ?string
+    {
+        $typeInfo = $model->getTypeInfo();
+        if ($typeInfo instanceof Type\ObjectType) {
+            $className = $typeInfo->getClassName();
+            if (class_exists($className)) {
+                return $className;
+            }
+        }
+
+        return null;
     }
 }

@@ -12,7 +12,7 @@ use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
 final class SakulbSerializerBundle extends AbstractBundle
 {
-    public const TAG_SERIALIZER_HANDLER = Configuration::ALIAS . '.handler';
+    public const string TAG_SERIALIZER_HANDLER = Configuration::ALIAS . '.handler';
 
     public function build(ContainerBuilder $container): void
     {

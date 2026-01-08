@@ -14,7 +14,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\Selectable;
-use Symfony\Component\PropertyInfo\Type;
+use Symfony\Component\TypeInfo\TypeIdentifier;
 
 final class ObjectHandler extends AbstractHandler
 {
@@ -72,7 +72,7 @@ final class ObjectHandler extends AbstractHandler
 
             return $collection;
         }
-        if (Type::BUILTIN_TYPE_ARRAY === $metadata->type) {
+        if (TypeIdentifier::ARRAY->value === $metadata->type) {
             if ($metadata->customType || $metadata->discriminatorMap) {
                 $array = [];
                 foreach ($value as $key => $item) {
@@ -97,11 +97,11 @@ final class ObjectHandler extends AbstractHandler
     {
         $description = parent::describe($property, $metadata);
         if (is_a($metadata->type, Collection::class, true)
-            || Type::BUILTIN_TYPE_ARRAY === $metadata->type) {
-            $description['type'] = Type::BUILTIN_TYPE_ARRAY;
+            || TypeIdentifier::ARRAY->value === $metadata->type) {
+            $description['type'] = TypeIdentifier::ARRAY->value;
             $description['items'] = null;
             if (Serialize::KEYS_VALUES === $metadata->strategy) {
-                $description['type'] = Type::BUILTIN_TYPE_OBJECT;
+                $description['type'] = TypeIdentifier::OBJECT->value;
                 $description['title'] = 'Custom key-value data.';
 
                 return $description;
@@ -109,7 +109,7 @@ final class ObjectHandler extends AbstractHandler
             if ($metadata->customType && class_exists($metadata->customType)) {
                 $description['title'] = 'Array of ' . SerializerHelper::getClassBaseName($metadata->customType);
                 $description['items'] = [
-                    'type' => Type::BUILTIN_TYPE_OBJECT,
+                    'type' => TypeIdentifier::OBJECT->value,
                     SerializerModelDescriber::NESTED_CLASS => $metadata->customType,
                 ];
             }

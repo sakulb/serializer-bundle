@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Sakulb\SerializerBundle\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Sakulb\SerializerBundle\Exception\SerializerException;
 use Sakulb\SerializerBundle\Tests\TestApp\Entity\Example;
 use Sakulb\SerializerBundle\Tests\TestApp\Model\ExampleBackedEnum;
 use Sakulb\SerializerBundle\Tests\TestApp\Model\ExampleUnitEnum;
 use DateTimeImmutable;
-use UnitEnum;
 
 final class SerializeDeserializeBasicTest extends AbstractTestCase
 {
     /**
      * @throws SerializerException
-     * @dataProvider data
      */
+    #[DataProvider('data')]
     public function testSerializeBasic(string $json, Example $data): void
     {
         $serialized = $this->serializer->serialize($data);
@@ -25,19 +25,19 @@ final class SerializeDeserializeBasicTest extends AbstractTestCase
 
     /**
      * @throws SerializerException
-     * @dataProvider data
      */
+    #[DataProvider('data')]
     public function testDeSerializeBasic(string $json, Example $data): void
     {
         $deserialized = $this->serializer->deserialize($json, $data::class);
         self::assertEquals($data, $deserialized);
     }
 
-    public function data(): iterable
+    public static function data(): iterable
     {
         yield [
             '{"id":1,"name":"Test name","createdAt":"2023-12-31T12:34:56Z","place":"first","color":"Red"}',
-            (new Example())
+            new Example()
                 ->setId(1)
                 ->setName('Test name')
                 ->setCreatedAt(new DateTimeImmutable('2023-12-31T12:34:56Z'))
@@ -47,7 +47,7 @@ final class SerializeDeserializeBasicTest extends AbstractTestCase
 
         yield [
             '{"id":2,"name":"Another","createdAt":"2022-12-31T00:00:00Z","place":"second","color":"Green"}',
-            (new Example())
+            new Example()
                 ->setId(2)
                 ->setName('Another')
                 ->setCreatedAt(new DateTimeImmutable('2022-12-31T00:00:00Z'))

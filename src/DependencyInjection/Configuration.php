@@ -9,9 +9,9 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 final class Configuration implements ConfigurationInterface
 {
-    public const ALIAS = 'sakulb_serializer';
-    public const CONFIG_DATE_FORMAT = 'date_format';
-    public const CONFIG_PARAMETER_BAG = 'parameter_bag';
+    public const string ALIAS = 'sakulb_serializer';
+    public const string CONFIG_DATE_FORMAT = 'date_format';
+    public const string CONFIG_PARAMETER_BAG = 'parameter_bag';
 
     public function getConfigTreeBuilder(): TreeBuilder
     {

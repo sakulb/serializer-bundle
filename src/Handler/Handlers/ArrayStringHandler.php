@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Sakulb\SerializerBundle\Handler\Handlers;
 
+use Closure;
 use Sakulb\SerializerBundle\Exception\SerializerException;
 use Sakulb\SerializerBundle\Metadata\Metadata;
-use Symfony\Component\PropertyInfo\Type;
+use Symfony\Component\TypeInfo\TypeIdentifier;
 
 final class ArrayStringHandler extends AbstractHandler
 {
@@ -42,18 +43,18 @@ final class ArrayStringHandler extends AbstractHandler
     public function describe(string $property, Metadata $metadata): array
     {
         $description = parent::describe($property, $metadata);
-        $description['type'] = Type::BUILTIN_TYPE_STRING;
+        $description['type'] = TypeIdentifier::STRING->value;
         $description['format'] = 'string, values separated by comma';
         unset($description['items']);
 
         return $description;
     }
 
-    private function getDeserializeFunction(Metadata $metadata): \Closure
+    private function getDeserializeFunction(Metadata $metadata): Closure
     {
         return match ($metadata->type) {
-            Type::BUILTIN_TYPE_INT => fn (string $item): int => (int) $item,
-            Type::BUILTIN_TYPE_FLOAT => fn (string $item): float => (float) $item,
+            TypeIdentifier::INT->value => fn (string $item): int => (int) $item,
+            TypeIdentifier::FLOAT->value => fn (string $item): float => (float) $item,
             default => fn (string $item): string => trim($item),
         };
     }

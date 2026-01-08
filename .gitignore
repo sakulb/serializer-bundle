@@ -6,6 +6,7 @@
 /var
 
 # Env files
+.env
 .env.local
 .env.local.php
 .env.*.local

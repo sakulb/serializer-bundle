@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Sakulb\SerializerBundle\Helper;
 
-use Symfony\Component\PropertyInfo\Type;
+use Symfony\Component\TypeInfo\TypeIdentifier;
+use Symfony\Component\Uid\Ulid;
 use Symfony\Component\Uid\Uuid;
 
 final class SerializerHelper
@@ -12,10 +13,10 @@ final class SerializerHelper
     public static function getOaFriendlyType(string $type): string
     {
         return match ($type) {
-            Type::BUILTIN_TYPE_INT => 'integer',
-            Type::BUILTIN_TYPE_BOOL => 'boolean',
-            Type::BUILTIN_TYPE_FLOAT => 'number',
-            Uuid::class => Type::BUILTIN_TYPE_STRING,
+            TypeIdentifier::INT->value => 'integer',
+            TypeIdentifier::BOOL->value => 'boolean',
+            TypeIdentifier::FLOAT->value => 'number',
+            Uuid::class, Ulid::class => TypeIdentifier::STRING->value,
             default => $type,
         };
     }

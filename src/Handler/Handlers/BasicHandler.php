@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace Sakulb\SerializerBundle\Handler\Handlers;
 
 use Sakulb\SerializerBundle\Metadata\Metadata;
-use Symfony\Component\PropertyInfo\Type;
+use Symfony\Component\TypeInfo\TypeIdentifier;
 
 final class BasicHandler extends AbstractHandler
 {
-    public const BASIC_TYPES = [
-        Type::BUILTIN_TYPE_INT,
-        Type::BUILTIN_TYPE_STRING,
-        Type::BUILTIN_TYPE_FLOAT,
-        Type::BUILTIN_TYPE_BOOL,
+    public const array BASIC_TYPES = [
+        TypeIdentifier::INT->value,
+        TypeIdentifier::STRING->value,
+        TypeIdentifier::FLOAT->value,
+        TypeIdentifier::BOOL->value,
     ];
 
     public static function getPriority(): int
@@ -43,10 +43,10 @@ final class BasicHandler extends AbstractHandler
         }
 
         return match ($metadata->type) {
-            Type::BUILTIN_TYPE_STRING => (string) $value,
-            Type::BUILTIN_TYPE_INT => (int) $value,
-            Type::BUILTIN_TYPE_FLOAT => (float) $value,
-            Type::BUILTIN_TYPE_BOOL => filter_var($value, FILTER_VALIDATE_BOOL)
+            TypeIdentifier::STRING->value => (string) $value,
+            TypeIdentifier::INT->value => (int) $value,
+            TypeIdentifier::FLOAT->value => (float) $value,
+            TypeIdentifier::BOOL->value => filter_var($value, FILTER_VALIDATE_BOOL)
         };
     }
 

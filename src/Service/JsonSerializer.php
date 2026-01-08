@@ -11,11 +11,11 @@ use Sakulb\SerializerBundle\Metadata\Metadata;
 use Sakulb\SerializerBundle\Metadata\MetadataRegistry;
 use JsonException;
 
-final class JsonSerializer
+final readonly class JsonSerializer
 {
     public function __construct(
-        private readonly HandlerResolver $handlerResolver,
-        private readonly MetadataRegistry $metadataRegistry,
+        private HandlerResolver $handlerResolver,
+        private MetadataRegistry $metadataRegistry,
     ) {
     }
 

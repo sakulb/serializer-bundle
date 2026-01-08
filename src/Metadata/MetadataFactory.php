@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sakulb\SerializerBundle\Metadata;
 
+use PropertyHookType;
 use Sakulb\SerializerBundle\Attributes\Serialize;
 use Sakulb\SerializerBundle\DependencyInjection\SakulbSerializerExtension;
 use Sakulb\SerializerBundle\Exception\SerializerException;
@@ -14,12 +15,12 @@ use ReflectionNamedType;
 use ReflectionProperty;
 use ReflectionUnionType;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\PropertyInfo\Type;
+use Symfony\Component\TypeInfo\TypeIdentifier;
 
-final class MetadataFactory
+final readonly class MetadataFactory
 {
     public function __construct(
-        private readonly ParameterBagInterface $parameterBag
+        private ParameterBagInterface $parameterBag
     ) {
     }
 
@@ -131,7 +132,7 @@ final class MetadataFactory
         $type = '';
         if ($propertyType instanceof ReflectionNamedType) {
             $type = $propertyType->getName();
-            if (Type::BUILTIN_TYPE_BOOL === $type) {
+            if (TypeIdentifier::BOOL->value === $type) {
                 $getterPrefix = 'is';
             }
         }
@@ -149,10 +150,10 @@ final class MetadataFactory
         $getterSetterStrategy = true;
         if (version_compare(PHP_VERSION, '8.4.0', '>=') && $property->hasHooks()) {
             $getterSetterStrategy = false;
-            if ($property->hasHook(\PropertyHookType::Get)) {
+            if ($property->hasHook(PropertyHookType::Get)) {
                 $getter = $property->getName();
             }
-            if ($property->hasHook(\PropertyHookType::Set)) {
+            if ($property->hasHook(PropertyHookType::Set)) {
                 $setter = $property->getName();
             }
         }

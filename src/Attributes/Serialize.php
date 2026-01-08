@@ -10,8 +10,8 @@ use Attribute;
 #[Attribute(Attribute::TARGET_PROPERTY | Attribute::TARGET_METHOD)]
 final class Serialize
 {
-    public const KEYS_VALUES = 'kv';
-    public const DISCRIMINATOR_COLUMN = 'discriminator';
+    public const string KEYS_VALUES = 'kv';
+    public const string DISCRIMINATOR_COLUMN = 'discriminator';
 
     /**
      * @param null|array<string, 'ASC'|'DESC'> $orderBy
