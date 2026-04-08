@@ -46,7 +46,8 @@ final class BasicHandler extends AbstractHandler
             TypeIdentifier::STRING->value => (string) $value,
             TypeIdentifier::INT->value => (int) $value,
             TypeIdentifier::FLOAT->value => (float) $value,
-            TypeIdentifier::BOOL->value => filter_var($value, FILTER_VALIDATE_BOOL)
+            TypeIdentifier::BOOL->value => filter_var($value, FILTER_VALIDATE_BOOL),
+            default => null,
         };
     }
 
