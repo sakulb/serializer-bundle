@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sakulb\SerializerBundle\Attributes;
 
+use Doctrine\Common\Collections\Order;
 use Sakulb\SerializerBundle\Metadata\ContainerParam;
 use Attribute;
 
@@ -14,7 +15,7 @@ final class Serialize
     public const string DISCRIMINATOR_COLUMN = 'discriminator';
 
     /**
-     * @param null|array<string, 'ASC'|'DESC'> $orderBy
+     * @param null|array<string, Order> $orderBy
      */
     public function __construct(
         public ?string $serializedName = null,

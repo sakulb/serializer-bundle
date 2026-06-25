@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Sakulb\SerializerBundle\Metadata;
 
+use Doctrine\Common\Collections\Order;
+
 final class Metadata
 {
     /**
      * @param class-string|string $type
      * @param class-string|string|null $customType
      * @param array<string, class-string>|null $discriminatorMap
-     * @param null|array<string, 'ASC'|'DESC'> $orderBy
+     * @param null|array<string, Order> $orderBy
      */
     public function __construct(
         public string $type,
